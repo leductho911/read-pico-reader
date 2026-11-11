@@ -1605,6 +1605,9 @@ static void clean_filename(char *dst, size_t cap, const char *filename) {
 // 截断必须停在UTF8字符边界。/ Truncation must stop at a UTF8 character boundary.
 static void copy_text(char* dst, size_t cap, const char* src) {
     if (!cap) return;
+#ifdef ESP_PLATFORM
+    src = ui_tr(src);
+#endif
     size_t n = strlen(src);
     if (n >= cap) {
         n = cap - 1;

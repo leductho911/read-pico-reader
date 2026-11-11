@@ -30,6 +30,9 @@
 #include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef ESP_PLATFORM
+#include "ui_locale_format.h"
+#endif
 
 #include "cJSON.h"
 #include "esp_app_desc.h"

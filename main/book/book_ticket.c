@@ -9,6 +9,9 @@
  * 用户修订：锁屏入口统一系统字体，截短测量须与实际界面字体及字号一致。
  * User revision: lock entry selects the system face; truncation must measure the actual UI face and size.
  */
+#ifdef ESP_PLATFORM
+#include "ui_locale_format.h"
+#endif
 #include "book_ticket.h"
 #include <stdio.h>
 #include <stdlib.h>

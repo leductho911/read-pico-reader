@@ -21,6 +21,9 @@
 #pragma GCC optimize ("Os")
 #endif
 #include <string.h>
+#ifdef ESP_PLATFORM
+#include "ui_locale_format.h"
+#endif
 
 #include "app.h"
 #include "app_registry.h"

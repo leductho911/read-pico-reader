@@ -6,6 +6,9 @@
  * 用户修订：分段擦除并串行化闪存与屏幕推送，启动前检查连续内存，低内存安全失败。
  * User revision: erase incrementally and serialize flash with display output; require memory headroom and fail safely on shortage.
  */
+#ifdef ESP_PLATFORM
+#include "ui_locale_format.h"
+#endif
 #include "ota_online.h"
 #include "esp_app_desc.h"
 #include "esp_app_format.h"

@@ -181,6 +181,9 @@ static bool is_book(const char *name) {
     return book_file_path_supported(name);
 }
 static void copy_title(char *dst, size_t cap, const char *src) {
+#ifdef ESP_PLATFORM
+    src = ui_tr(src);
+#endif
     size_t n = strlen(src);
     if (n >= cap) {
         n = cap - 1;
