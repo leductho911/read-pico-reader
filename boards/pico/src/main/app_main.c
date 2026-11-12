@@ -103,7 +103,7 @@ static void draw_startup_frame(uint8_t *framebuffer) {
         int count, px, tracking, gray, center_y;
     } lines[] = {
         {"Kiikoread", wordmark, 9, 72, 2, 0, cy - 50},
-        {app_setup_english()?"Preparing resources":"准备资源", app_setup_english()?caption_en:caption, app_setup_english()?19:4, 24, app_setup_english()?1:8, 7, cy + 20},
+        {!app_setup_language()?"准备资源":"Preparing resources", !app_setup_language()?caption:caption_en, !app_setup_language()?4:19, 24, !app_setup_language()?8:1, 7, cy + 20},
     };
     // 以实际字宽居中，疏朗品牌字距与浅灰提示形成层次，不引入新的字体或位图。
     // Center measured advances; tracked branding and a muted caption add hierarchy without new fonts or bitmaps.

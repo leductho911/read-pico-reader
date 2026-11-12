@@ -1,0 +1,147 @@
+/* SPDX-License-Identifier: LicenseRef-Kiikoread-Personal-Study-1.0
+ * 中文：越南语带调字母到 ASCII 基础字符的回退映射。
+ * English: Fallback mapping from Vietnamese accented letters to base ASCII Latin codepoints.
+ */
+#pragma once
+#include <stdint.h>
+
+static inline uint32_t vietnamese_base_codepoint(uint32_t cp) {
+    switch (cp) {
+        case 0x00C0: return 0x0041; /* À -> A */
+        case 0x00C1: return 0x0041; /* Á -> A */
+        case 0x00C2: return 0x0041; /* Â -> A */
+        case 0x00C3: return 0x0041; /* Ã -> A */
+        case 0x00C8: return 0x0045; /* È -> E */
+        case 0x00C9: return 0x0045; /* É -> E */
+        case 0x00CA: return 0x0045; /* Ê -> E */
+        case 0x00CC: return 0x0049; /* Ì -> I */
+        case 0x00CD: return 0x0049; /* Í -> I */
+        case 0x00D2: return 0x004F; /* Ò -> O */
+        case 0x00D3: return 0x004F; /* Ó -> O */
+        case 0x00D4: return 0x004F; /* Ô -> O */
+        case 0x00D5: return 0x004F; /* Õ -> O */
+        case 0x00D9: return 0x0055; /* Ù -> U */
+        case 0x00DA: return 0x0055; /* Ú -> U */
+        case 0x00DD: return 0x0059; /* Ý -> Y */
+        case 0x00E0: return 0x0061; /* à -> a */
+        case 0x00E1: return 0x0061; /* á -> a */
+        case 0x00E2: return 0x0061; /* â -> a */
+        case 0x00E3: return 0x0061; /* ã -> a */
+        case 0x00E8: return 0x0065; /* è -> e */
+        case 0x00E9: return 0x0065; /* é -> e */
+        case 0x00EA: return 0x0065; /* ê -> e */
+        case 0x00EC: return 0x0069; /* ì -> i */
+        case 0x00ED: return 0x0069; /* í -> i */
+        case 0x00F2: return 0x006F; /* ò -> o */
+        case 0x00F3: return 0x006F; /* ó -> o */
+        case 0x00F4: return 0x006F; /* ô -> o */
+        case 0x00F5: return 0x006F; /* õ -> o */
+        case 0x00F9: return 0x0075; /* ù -> u */
+        case 0x00FA: return 0x0075; /* ú -> u */
+        case 0x00FD: return 0x0079; /* ý -> y */
+        case 0x0102: return 0x0041; /* Ă -> A */
+        case 0x0103: return 0x0061; /* ă -> a */
+        case 0x0110: return 0x0044; /* Đ -> D */
+        case 0x0111: return 0x0064; /* đ -> d */
+        case 0x0128: return 0x0049; /* Ĩ -> I */
+        case 0x0129: return 0x0069; /* ĩ -> i */
+        case 0x0168: return 0x0055; /* Ũ -> U */
+        case 0x0169: return 0x0075; /* ũ -> u */
+        case 0x01A0: return 0x004F; /* Ơ -> O */
+        case 0x01A1: return 0x006F; /* ơ -> o */
+        case 0x01AF: return 0x0055; /* Ư -> U */
+        case 0x01B0: return 0x0075; /* ư -> u */
+        case 0x1EA0: return 0x0041; /* Ạ -> A */
+        case 0x1EA1: return 0x0061; /* ạ -> a */
+        case 0x1EA2: return 0x0041; /* Ả -> A */
+        case 0x1EA3: return 0x0061; /* ả -> a */
+        case 0x1EA4: return 0x0041; /* Ấ -> A */
+        case 0x1EA5: return 0x0061; /* ấ -> a */
+        case 0x1EA6: return 0x0041; /* Ầ -> A */
+        case 0x1EA7: return 0x0061; /* ầ -> a */
+        case 0x1EA8: return 0x0041; /* Ẩ -> A */
+        case 0x1EA9: return 0x0061; /* ẩ -> a */
+        case 0x1EAA: return 0x0041; /* Ẫ -> A */
+        case 0x1EAB: return 0x0061; /* ẫ -> a */
+        case 0x1EAC: return 0x0041; /* Ậ -> A */
+        case 0x1EAD: return 0x0061; /* ậ -> a */
+        case 0x1EAE: return 0x0041; /* Ắ -> A */
+        case 0x1EAF: return 0x0061; /* ắ -> a */
+        case 0x1EB0: return 0x0041; /* Ằ -> A */
+        case 0x1EB1: return 0x0061; /* ằ -> a */
+        case 0x1EB2: return 0x0041; /* Ẳ -> A */
+        case 0x1EB3: return 0x0061; /* ẳ -> a */
+        case 0x1EB4: return 0x0041; /* Ẵ -> A */
+        case 0x1EB5: return 0x0061; /* ẵ -> a */
+        case 0x1EB6: return 0x0041; /* Ặ -> A */
+        case 0x1EB7: return 0x0061; /* ặ -> a */
+        case 0x1EB8: return 0x0045; /* Ẹ -> E */
+        case 0x1EB9: return 0x0065; /* ẹ -> e */
+        case 0x1EBA: return 0x0045; /* Ẻ -> E */
+        case 0x1EBB: return 0x0065; /* ẻ -> e */
+        case 0x1EBC: return 0x0045; /* Ẽ -> E */
+        case 0x1EBD: return 0x0065; /* ẽ -> e */
+        case 0x1EBE: return 0x0045; /* Ế -> E */
+        case 0x1EBF: return 0x0065; /* ế -> e */
+        case 0x1EC0: return 0x0045; /* Ề -> E */
+        case 0x1EC1: return 0x0065; /* ề -> e */
+        case 0x1EC2: return 0x0045; /* Ể -> E */
+        case 0x1EC3: return 0x0065; /* ể -> e */
+        case 0x1EC4: return 0x0045; /* Ễ -> E */
+        case 0x1EC5: return 0x0065; /* ễ -> e */
+        case 0x1EC6: return 0x0045; /* Ệ -> E */
+        case 0x1EC7: return 0x0065; /* ệ -> e */
+        case 0x1EC8: return 0x0049; /* Ỉ -> I */
+        case 0x1EC9: return 0x0069; /* ỉ -> i */
+        case 0x1ECA: return 0x0049; /* Ị -> I */
+        case 0x1ECB: return 0x0069; /* ị -> i */
+        case 0x1ECC: return 0x004F; /* Ọ -> O */
+        case 0x1ECD: return 0x006F; /* ọ -> o */
+        case 0x1ECE: return 0x004F; /* Ỏ -> O */
+        case 0x1ECF: return 0x006F; /* ỏ -> o */
+        case 0x1ED0: return 0x004F; /* Ố -> O */
+        case 0x1ED1: return 0x006F; /* ố -> o */
+        case 0x1ED2: return 0x004F; /* Ồ -> O */
+        case 0x1ED3: return 0x006F; /* ồ -> o */
+        case 0x1ED4: return 0x004F; /* Ổ -> O */
+        case 0x1ED5: return 0x006F; /* ổ -> o */
+        case 0x1ED6: return 0x004F; /* Ỗ -> O */
+        case 0x1ED7: return 0x006F; /* ỗ -> o */
+        case 0x1ED8: return 0x004F; /* Ộ -> O */
+        case 0x1ED9: return 0x006F; /* ộ -> o */
+        case 0x1EDA: return 0x004F; /* Ớ -> O */
+        case 0x1EDB: return 0x006F; /* ớ -> o */
+        case 0x1EDC: return 0x004F; /* Ờ -> O */
+        case 0x1EDD: return 0x006F; /* ờ -> o */
+        case 0x1EDE: return 0x004F; /* Ở -> O */
+        case 0x1EDF: return 0x006F; /* ở -> o */
+        case 0x1EE0: return 0x004F; /* Ỡ -> O */
+        case 0x1EE1: return 0x006F; /* ỡ -> o */
+        case 0x1EE2: return 0x004F; /* Ợ -> O */
+        case 0x1EE3: return 0x006F; /* ợ -> o */
+        case 0x1EE4: return 0x0055; /* Ụ -> U */
+        case 0x1EE5: return 0x0075; /* ụ -> u */
+        case 0x1EE6: return 0x0055; /* Ủ -> U */
+        case 0x1EE7: return 0x0075; /* ủ -> u */
+        case 0x1EE8: return 0x0055; /* Ứ -> U */
+        case 0x1EE9: return 0x0075; /* ứ -> u */
+        case 0x1EEA: return 0x0055; /* Ừ -> U */
+        case 0x1EEB: return 0x0075; /* ừ -> u */
+        case 0x1EEC: return 0x0055; /* Ử -> U */
+        case 0x1EED: return 0x0075; /* ử -> u */
+        case 0x1EEE: return 0x0055; /* Ữ -> U */
+        case 0x1EEF: return 0x0075; /* ữ -> u */
+        case 0x1EF0: return 0x0055; /* Ự -> U */
+        case 0x1EF1: return 0x0075; /* ự -> u */
+        case 0x1EF2: return 0x0059; /* Ỳ -> Y */
+        case 0x1EF3: return 0x0079; /* ỳ -> y */
+        case 0x1EF4: return 0x0059; /* Ỵ -> Y */
+        case 0x1EF5: return 0x0079; /* ỵ -> y */
+        case 0x1EF6: return 0x0059; /* Ỷ -> Y */
+        case 0x1EF7: return 0x0079; /* ỷ -> y */
+        case 0x1EF8: return 0x0059; /* Ỹ -> Y */
+        case 0x1EF9: return 0x0079; /* ỹ -> y */
+        default: return 0;
+    }
+}
+

@@ -7,8 +7,16 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+enum {
+    UI_LOCALE_ZH = 0,
+    UI_LOCALE_EN = 1,
+    UI_LOCALE_VI = 2,
+};
+void ui_locale_set_language(int lang);
+int ui_locale_get_language(void);
 void ui_locale_set_english(bool english);
 bool ui_locale_english(void);
+bool ui_locale_vietnamese(void);
 /// 仅翻译只读固件字符串；RAM用户数据原样返回。/ Translate only readonly firmware literals; preserve RAM data.
 const char *ui_tr(const char *literal);
 #ifdef __cplusplus

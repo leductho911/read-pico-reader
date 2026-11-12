@@ -8,7 +8,10 @@
 /// 在NVS初始化成功后、任何默认值迁移写入之前调用。/ Call after successful NVS init, before writing migrated defaults.
 void app_setup_init(void);
 bool app_setup_pending(void);
+uint8_t app_setup_language(void);
+esp_err_t app_setup_set_language(uint8_t language);
 bool app_setup_english(void);
+bool app_setup_vietnamese(void);
 esp_err_t app_setup_set_english(bool english);
 /// 跳过与完成都需提交成功才退出，失败保留引导。/ Both Skip and Finish leave only after a successful commit.
 esp_err_t app_setup_finish(void);

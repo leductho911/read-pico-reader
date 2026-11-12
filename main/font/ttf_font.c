@@ -23,6 +23,7 @@
 #include "../kiiko_board_config.h"
 #include "ttf_stroke_filter.h"
 #include "ui_hanzi_aa_scale.h"
+#include "vietnamese_diacritics.h"
 
 #include <dirent.h>
 #if KIIKO_BOARD_METALIO47
@@ -2074,6 +2075,15 @@ static glyph_entry_t* rasterize_glyph(uint32_t codepoint, int pixel_height) {
             // 内存不足时下次重试，不把方块缓存成该字。/ Retry after memory pressure; never cache .notdef for this character.
             if (!ui_hanzi_get_aa_cached(&s_reader_hanzi,codepoint,extra)) return NULL;
             supplemental=true;
+        } else {
+            uint32_t base = vietnamese_base_codepoint(codepoint);
+            if (base) {
+                gid = stbtt_FindGlyphIndex(&font_info, (int)base);
+                if (!gid && builtin) {
+                    gid = stbtt_FindGlyphIndex(builtin, (int)base);
+                    if (gid) { raster_font = builtin; borrowed = true; }
+                }
+            }
         }
     }
     if (!borrowed && !supplemental && !pack_glyph_tree(gid)) return NULL;

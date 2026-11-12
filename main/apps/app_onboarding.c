@@ -36,7 +36,7 @@ static read_pico_transfer_status_t s_network;
 static const char *label(const char *zh,const char *en){return app_setup_english()||(!ui_font_has_text(zh)&&!ttf_font_has_text(zh))?en:zh;}
 static EpdRect next_rect(void){return (EpdRect){52,976,580,76};}
 static EpdRect skip_rect(void){return (EpdRect){52,1120,580,64};}
-static EpdRect language_rect(int i){return (EpdRect){52,560+i*136,580,118};}
+static EpdRect language_rect(int i){return (EpdRect){52,500+i*130,580,114};}
 static EpdRect local_rect(void){return (EpdRect){52,358,580,174};}
 static EpdRect source_rect(int i){return (EpdRect){52,564+i*116,580,94};}
 static void button(uint8_t *fb,EpdRect r,const char *text,bool active){
@@ -161,11 +161,13 @@ static void draw(app_ctx_t *ctx,uint8_t *fb){
         ui_text_box(fb,(EpdRect){52,408,580,70},27,s_step?label("连接网络，传入书籍和完整字体","Connect for books and complete fonts"):label("欢迎使用 kiikoread","Welcome to kiikoread"),EPD_DRAW_ALIGN_CENTER,false);
     }
     if(s_step==0){
-        for(int i=0;i<2;++i){EpdRect r=language_rect(i);bool selected=app_setup_english()==(i==1);
+        static const char *const names[]={"简体中文","English","Tiếng Việt"};
+        static const char *const subs[]={"Chinese","English","Vietnamese"};
+        for(int i=0;i<3;++i){EpdRect r=language_rect(i);bool selected=app_setup_language()==(uint8_t)i;
             ui_draw_choice_round_rect(fb,r,22,false);
-            ui_text_vc(fb,r.x+26,r.y+43,33,i?"English":label("简体中文","Chinese"),EPD_DRAW_ALIGN_LEFT,false);
-            ui_text_vc(fb,r.x+26,r.y+86,20,i?label("英语","English"):"Chinese",EPD_DRAW_ALIGN_LEFT,false);
-            epd_draw_circle(r.x+r.width-38,r.y+59,15,0x60,fb);if(selected)epd_fill_circle(r.x+r.width-38,r.y+59,5,0x30,fb);
+            ui_text_vc(fb,r.x+26,r.y+41,33,names[i],EPD_DRAW_ALIGN_LEFT,false);
+            ui_text_vc(fb,r.x+26,r.y+84,20,subs[i],EPD_DRAW_ALIGN_LEFT,false);
+            epd_draw_circle(r.x+r.width-38,r.y+57,15,0x60,fb);if(selected)epd_fill_circle(r.x+r.width-38,r.y+57,5,0x30,fb);
         }
     }else if(s_step==1){
         EpdRect r={52,506,580,146};ui_draw_choice_round_rect(fb,r,22,false);
@@ -212,8 +214,8 @@ static app_redraw_t gesture(app_ctx_t *ctx,const ui_gesture_event_t *ev){
         if(++s_step==2)scan_fonts();
         return APP_REDRAW_PAGE;
     }
-    if(s_step==0){for(int i=0;i<2;++i)if(ui_rect_hit(language_rect(i),x,y)){
-        if(app_setup_set_english(i==1)!=ESP_OK)snprintf(s_notice,sizeof(s_notice),"%s",label("配置保存失败，请重试","Could not save setup. Try again"));
+    if(s_step==0){for(int i=0;i<3;++i)if(ui_rect_hit(language_rect(i),x,y)){
+        if(app_setup_set_language(i)!=ESP_OK)snprintf(s_notice,sizeof(s_notice),"%s",label("配置保存失败，请重试","Could not save setup. Try again"));
         return APP_REDRAW_PAGE;}}
     if(s_step==1&&ui_rect_hit((EpdRect){52,700,580,76},x,y)){open_transfer(ctx,SETUP_WIFI);return APP_REDRAW_NONE;}
     if(s_step==2){

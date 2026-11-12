@@ -1033,12 +1033,13 @@ static void render_content(app_ctx_t *ctx, uint8_t *fb) {
     }
     if(s_page==SETTINGS_LANGUAGE){
         back_header(fb,"语言");
-        const char *labels[]={"简体中文","English"};
-        for(int i=0;i<2;++i){EpdRect rect={36,300+i*154,612,122};
-            ui_draw_choice_round_rect(fb,rect,22,app_setup_english()==(i==1));
-            ui_text_box(fb,ui_inset_rect(rect,20),34,labels[i],EPD_DRAW_ALIGN_CENTER,app_setup_english()==(i==1));
+        const char *labels[]={"简体中文","English","Tiếng Việt"};
+        for(int i=0;i<3;++i){EpdRect rect={36,260+i*136,612,112};
+            bool selected = (app_setup_language() == i);
+            ui_draw_choice_round_rect(fb,rect,22,selected);
+            ui_text_box(fb,ui_inset_rect(rect,20),32,labels[i],EPD_DRAW_ALIGN_CENTER,selected);
         }
-        ui_text_box(fb,(EpdRect){36,642,612,88},24,"仅切换系统语言，书籍和输入内容保留原文",EPD_DRAW_ALIGN_CENTER,false);
+        ui_text_box(fb,(EpdRect){36,680,612,88},24,"仅切换系统语言，书籍和输入内容保留原文",EPD_DRAW_ALIGN_CENTER,false);
         if(s_notice[0])ui_text_box(fb,(EpdRect){36,778,612,80},23,s_notice,EPD_DRAW_ALIGN_CENTER,false);
         settings_navigation(fb);return;
     }
@@ -1508,7 +1509,7 @@ static void render_content(app_ctx_t *ctx, uint8_t *fb) {
     const char *display_labels[]={"系统字体","系统对比度","主页刷新模式","首页强刷","自动休眠锁屏","双击解锁","关机睡眠","语言"};
     const char *display_values[]={font_name,contrast,
         app_settings_main_refresh_mode()==APP_MAIN_REFRESH_FAST?"快刷":app_settings_main_refresh_mode()==APP_MAIN_REFRESH_WATER?"水波纹":"普通",
-        app_settings_home_full_refresh()?"开启":"关闭",idle,"",app_settings_staged_shutdown()?"先浅后深":"彻底断电",app_setup_english()?"English":"简体中文"};
+        app_settings_home_full_refresh()?"开启":"关闭",idle,"",app_settings_staged_shutdown()?"先浅后深":"彻底断电",app_setup_vietnamese()?"Tiếng Việt":app_setup_english()?"English":"简体中文"};
     const int display_icons[]={2,7,15,11,14,SETTINGS_UNLOCK_ICON,9,2};
     setting_group(fb,SETTINGS_DISPLAY_Y-49,"显示",SETTINGS_DISPLAY_Y,
                   display_icons,display_labels,display_values,SETTINGS_DISPLAY_ROWS);
@@ -2383,8 +2384,8 @@ static app_redraw_t on_gesture(app_ctx_t *ctx, const ui_gesture_event_t *ev) {
     }
     if(s_page==SETTINGS_LANGUAGE&&ev->type==UI_GESTURE_TAP){
         if(ev->y0<190){s_page=SETTINGS_MAIN;s_notice[0]=0;return APP_REDRAW_PAGE;}
-        for(int i=0;i<2;++i)if(ui_rect_hit((EpdRect){36,300+i*154,612,122},ev->x0,ev->y0)){
-            if(app_setup_set_english(i==1)!=ESP_OK){snprintf(s_notice,sizeof(s_notice),"语言保存失败，请重试");return APP_REDRAW_PAGE;}
+        for(int i=0;i<3;++i)if(ui_rect_hit((EpdRect){36,260+i*136,612,112},ev->x0,ev->y0)){
+            if(app_setup_set_language(i)!=ESP_OK){snprintf(s_notice,sizeof(s_notice),"语言保存失败，请重试");return APP_REDRAW_PAGE;}
             s_notice[0]=0;return APP_REDRAW_FULL;
         }
     }
