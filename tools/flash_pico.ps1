@@ -68,3 +68,4 @@ if ($LASTEXITCODE -eq 0) {
 } else {
     Write-Host "`nFlash failed with exit code $LASTEXITCODE" -ForegroundColor Red
 }
+
