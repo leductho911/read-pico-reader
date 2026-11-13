@@ -35,16 +35,16 @@ def literals(text):
 def collect():
  found={}
  for path in paths()+[ROOT/p for p in ['boards/metalio47/src/main/sleep.c','boards/pico/src/main/sleep.c','boards/metalio47/src/main/app_main.c','boards/pico/src/main/app_main.c'] if (ROOT/p).exists()]:
-  for text in literals(path.read_text()):
+  for text in literals(path.read_text(encoding='utf-8', errors='replace')):
    if CJK.search(text):found.setdefault(text,[]).append(str(path.relative_to(ROOT)))
  return found
 
 def main():
  p=argparse.ArgumentParser();p.add_argument('--collect',type=Path);args=p.parse_args();found=collect()
  if args.collect:
-  args.collect.write_text(json.dumps(found,indent=2,ensure_ascii=False)+'\n');print(len(found));return
- data=json.loads(CATALOG.read_text());missing=sorted(set(found)-set(data));assert not missing,'Untranslated UI literals: '+repr(missing)
- preserved=set(json.loads((CATALOG.parent/'preserved-content.json').read_text()))
+  args.collect.write_text(json.dumps(found,indent=2,ensure_ascii=False)+'\n',encoding='utf-8');print(len(found));return
+ data=json.loads(CATALOG.read_text(encoding='utf-8'));missing=sorted(set(found)-set(data));assert not missing,'Untranslated UI literals: '+repr(missing)
+ preserved=set(json.loads((CATALOG.parent/'preserved-content.json').read_text(encoding='utf-8')))
  catalog_vi=CATALOG.parent/'vi.json'
  data_vi=json.loads(catalog_vi.read_text(encoding='utf-8')) if catalog_vi.exists() else {}
  for zh,en in data.items():

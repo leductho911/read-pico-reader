@@ -180,17 +180,55 @@ def export(build, output, board):
     return result
 
 
+def auto_detect_esp_idf(target=None):
+    eim_json = Path('C:/Espressif/tools/eim_idf.json')
+    if eim_json.is_file():
+        try:
+            data = json.loads(eim_json.read_text(encoding='utf-8'))
+            for entry in data.get('idfInstalled', []):
+                p = Path(entry.get('path', ''))
+                if (p / 'tools/idf.py').is_file():
+                    if target and not (p / 'components/soc' / target).is_dir():
+                        continue
+                    py = Path(entry.get('python', '')) if entry.get('python') else None
+                    tools = Path(entry.get('idfToolsPath', '')) if entry.get('idfToolsPath') else None
+                    return p, py, tools
+        except Exception:
+            pass
+    for candidate in [Path('C:/esp/v6.1/esp-idf'), Path('C:/esp/esp-idf'), Path.home() / 'esp/esp-idf']:
+        if (candidate / 'tools/idf.py').is_file():
+            if target and not (candidate / 'components/soc' / target).is_dir():
+                continue
+            return candidate, None, None
+    return None, None, None
+
+
 def build_one(board, args):
     info = metadata(board)
     sdk_argument = getattr(args, 'idf_' + board)
-    sdk = Path(sdk_argument or os.environ.get('KIIKO_IDF_' + board.upper(), '') or os.environ.get('IDF_PATH', '')).resolve()
+    sdk_raw = sdk_argument or os.environ.get('KIIKO_IDF_' + board.upper(), '') or os.environ.get('IDF_PATH', '')
+    detected_sdk, detected_py, detected_tools = None, None, None
+    if not sdk_raw:
+        detected_sdk, detected_py, detected_tools = auto_detect_esp_idf(info['idf_target'])
+        sdk = detected_sdk.resolve() if detected_sdk else Path('').resolve()
+    else:
+        sdk = Path(sdk_raw).resolve()
     if not (sdk / 'tools/idf.py').is_file() or not (sdk / 'components/soc' / info['idf_target']).is_dir():
         raise ValueError(f"{board} requires an ESP-IDF SDK supporting {info['idf_target']}: {sdk}")
+    if not args.tools:
+        if os.environ.get('IDF_TOOLS_PATH'):
+            args.tools = Path(os.environ['IDF_TOOLS_PATH'])
+        elif detected_tools and detected_tools.is_dir():
+            args.tools = detected_tools
+        elif Path('C:/Espressif/tools').is_dir():
+            args.tools = Path('C:/Espressif/tools')
     work = args.output.resolve() / board
     source, build = work / 'source', work / 'build'
     # 虚拟环境解释器常为符号链接；保留入口路径，不能解析成系统Python。
     # Venv executables are often symlinks; retain that entry path instead of resolving to system Python.
     python = args.python.absolute()
+    if detected_py and detected_py.is_file() and args.python == Path(sys.executable):
+        python = detected_py
     command = [str(python), str(sdk / 'tools/idf.py'), '-B', str(build),
                '-DIDF_TARGET=' + info['idf_target'], '-DKIIKO_BOARD=' + board,
                '-DSDKCONFIG=' + str(work / 'sdkconfig'),
@@ -268,7 +306,8 @@ def build_one(board, args):
     env.update(IDF_PATH=str(sdk), IDF_TARGET=info['idf_target'], KIIKO_BOARD=board,
                KIIKO_PROJECT_VER=info['version'], IDF_PYTHON_ENV_PATH=str(python.parent.parent),
                IDF_PYTHON_CHECK_CONSTRAINTS='no', IDF_SKIP_CHECK_SUBMODULES='1',
-               IDF_CCACHE_ENABLE='0', IDF_VER='v6.1', ESP_IDF_VERSION='6.1.0')
+               IDF_CCACHE_ENABLE='0', IDF_VER='v6.1', ESP_IDF_VERSION='6.1.0',
+               PYTHONUTF8='1')
     for key in ('PICO_PROJECT_VER', 'METALIO_PROJECT_VER', 'KIIKO_LOCAL_LATENCY', 'METALIO_LOCAL_LATENCY'):
         env.pop(key, None)
     extra = [str(python.parent)]
@@ -276,8 +315,12 @@ def build_one(board, args):
         tools = args.tools.resolve()
         env['IDF_TOOLS_PATH'] = str(tools)
         architecture = 'xtensa-esp-elf' if board == 'pico' else 'riscv32-esp-elf'
-        extra.extend(str(path) for path in (tools / 'tools' / architecture).glob('**/bin') if path.is_dir())
-        extra.extend(str(path) for path in (tools / 'tools/esp32ulp-elf').glob('**/bin') if path.is_dir())
+        for sub in [tools / architecture, tools / 'tools' / architecture,
+                    tools / 'esp32ulp-elf', tools / 'tools/esp32ulp-elf',
+                    tools / 'cmake', tools / 'ninja', tools / 'idf-exe', tools / 'ccache']:
+            if sub.is_dir():
+                extra.extend(str(path) for path in sub.glob('**/bin') if path.is_dir())
+                extra.extend(str(path) for path in sub.glob('**') if (path / 'ninja.exe').is_file() or (path / 'idf-exe.exe').is_file() or (path / 'ccache.exe').is_file())
     env['PATH'] = os.pathsep.join(extra + [env.get('PATH', '')])
     with (work / 'build.log').open('w', encoding='utf-8', errors='replace') as log:
         result = subprocess.run(command, cwd=source, env=env, stdout=log, stderr=subprocess.STDOUT)

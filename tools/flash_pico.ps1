@@ -33,7 +33,7 @@ if (-not (Test-Path $otaDataBin)) {
 }
 
 # Auto-activate ESP-IDF profile if esptool is not already in PATH
-if (-not (Get-Command "esptool.py" -ErrorAction SilentlyContinue) -and -not (Get-Command "esptool" -ErrorAction SilentlyContinue)) {
+if (-not (Get-Command "esptool" -ErrorAction SilentlyContinue) -and -not (Get-Command "esptool.py" -ErrorAction SilentlyContinue)) {
     $profile = "C:\Espressif\tools\Microsoft.v6.1.PowerShell_profile.ps1"
     if (Test-Path $profile) {
         Write-Host "Activating ESP-IDF environment from $profile..." -ForegroundColor Cyan
@@ -43,6 +43,8 @@ if (-not (Get-Command "esptool.py" -ErrorAction SilentlyContinue) -and -not (Get
     }
 }
 
+$esptoolCmd = if (Get-Command "esptool" -ErrorAction SilentlyContinue) { "esptool" } else { "esptool.py" }
+
 $portArgs = @()
 if ($Port) {
     $portArgs = @("-p", $Port)
@@ -51,14 +53,14 @@ $baudArgs = @("-b", $Baud)
 
 if ($FullFlash) {
     Write-Host "Flashing full image (bootloader + partition table + app + otadata)..." -ForegroundColor Green
-    esptool.py @portArgs @baudArgs write_flash `
+    & $esptoolCmd @portArgs @baudArgs write_flash `
         0x0 $bootloaderBin `
         0x8000 $partitionBin `
         0x10000 $appBin `
         0xd10000 $otaDataBin
 } else {
     Write-Host "Flashing app + resetting active OTA slot to ota_0..." -ForegroundColor Green
-    esptool.py @portArgs @baudArgs write_flash `
+    & $esptoolCmd @portArgs @baudArgs write_flash `
         0x10000 $appBin `
         0xd10000 $otaDataBin
 }

@@ -14,7 +14,7 @@ BLOCK = '#if defined(CONFIG_MBEDTLS_CERTIFICATE_BUNDLE_CROSS_SIGNED_VERIFY)\n   
 
 def prepare(idf: Path):
     path=idf/'components/mbedtls/esp_crt_bundle/esp_crt_bundle.c'
-    source=path.read_text()
+    source=path.read_text(encoding='utf-8')
     begin=source.index('int esp_crt_verify_callback(')
     at=source.index('    const mbedtls_x509_crt* const child = crt;',begin)
     end=source.index('    uint32_t flags_filtered',at)
@@ -28,7 +28,7 @@ def prepare(idf: Path):
     assert 'MBEDTLS_X509_BADCERT_BAD_MD' in terms
     start=begin+mask.start();stop=begin+mask.end()
     source=source[:start]+'uint32_t flags_filtered = *flags & ~(MBEDTLS_X509_BADCERT_BAD_MD);'+source[stop:]
-    if source!=path.read_text():path.write_text(source)
+    if source!=path.read_text(encoding='utf-8'):path.write_text(source, encoding='utf-8')
     print('IDF cross-signed callback verified: synthetic bundle roots only; real validity retained')
 
 if __name__=='__main__':prepare(Path(sys.argv[1]).resolve())

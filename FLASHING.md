@@ -22,9 +22,9 @@ In PowerShell:
 
 ---
 
-### Option B: Using `esptool.py` Directly
+### Option B: Using `esptool` Directly
 
-Open your ESP-IDF PowerShell environment:
+Open your ESP-IDF PowerShell environment (or any terminal with `esptool` in PATH):
 ```powershell
 & "C:\Espressif\tools\Microsoft.v6.1.PowerShell_profile.ps1"
 ```
@@ -33,8 +33,9 @@ Then run:
 
 #### Standard Update (App + OTA Data Reset)
 ```powershell
-esptool.py -p COM24 -b 460800 write_flash 0x10000 "build/boards/pico/build/Read_Pico.bin" 0xd10000 "build/boards/pico/build/ota_data_initial.bin"
+esptool -p COM24 -b 460800 write_flash 0x10000 "build/boards/pico/build/Read_Pico.bin" 0xd10000 "build/boards/pico/build/ota_data_initial.bin"
 ```
+*(Note: If using older esptool versions, `esptool.py` or `python -m esptool` also works).*
 
 > **IMPORTANT**:
 > Always include `0xd10000 "build/boards/pico/build/ota_data_initial.bin"` when flashing `0x10000`!
@@ -42,7 +43,7 @@ esptool.py -p COM24 -b 460800 write_flash 0x10000 "build/boards/pico/build/Read_
 
 #### Full Flash (Clean Install)
 ```powershell
-esptool.py -p COM24 -b 460800 write_flash `
+esptool -p COM24 -b 460800 write_flash `
     0x0 "build/boards/pico/build/bootloader/bootloader.bin" `
     0x8000 "build/boards/pico/build/partition_table/partition-table.bin" `
     0x10000 "build/boards/pico/build/Read_Pico.bin" `
@@ -75,9 +76,16 @@ If you make code changes and need to rebuild:
 # 1. Update UI translation catalog (if you edited strings or locales)
 python tools/gen_ui_locale.py
 
-# 2. Build Pico firmware using ESP-IDF v6.1
+# 2. Build Pico firmware (auto-detects ESP-IDF v6.1 on Windows)
 python tools/build_firmware.py --board pico
 ```
+
+> **Tip**: `build_firmware.py` automatically detects your ESP-IDF installation (`C:\esp\v6.1\esp-idf`), tools (`C:\Espressif\tools`), and virtualenv Python. You can run it directly in a normal PowerShell terminal without manually activating the ESP-IDF profile.
+>
+> If you have multiple SDK versions installed, you can explicitly specify the paths:
+> ```powershell
+> python tools/build_firmware.py --board pico --idf-pico C:\esp\v6.1\esp-idf --tools C:\Espressif\tools
+> ```
 
 Built binary files will be located in:
 `build/boards/pico/build/`
@@ -85,6 +93,9 @@ Built binary files will be located in:
 - `ota_data_initial.bin`
 - `bootloader/bootloader.bin`
 - `partition_table/partition-table.bin`
+
+Packaged USB/web distributions are generated in:
+`build/boards/packages/pico/`
 
 ---
 
@@ -94,16 +105,16 @@ Built binary files will be located in:
 1. Turn on the device and go to **Settings (设置)**.
 2. Tap **System Upgrade (系统升级)**:
    - Under **Current Version (当前版本)**, check the reported version and build timestamp (e.g. `0.3.3-rc106`).
-3. Check UI translations:
-   - In Settings, scroll to **Personal Features (个性化功能)**.
-   - Verify `"书籍百分比显示"` is translated to `"Book Percentage Display"`.
+3. Check UI languages & translations:
+   - Go to **Language (语言)** in Settings, and choose **English** or **Tiếng Việt**.
+   - Verify UI texts are correctly displayed in the selected language.
 
 ### Method 2: Serial Monitor
 In your ESP-IDF PowerShell window:
 ```powershell
 idf.py -p COM24 monitor
 ```
-Press the Reset button on the device (or run `esptool.py run`). The boot log will show:
+Press the Reset button on the device (or run `esptool run`). The boot log will show:
 ```text
 I (...) boot: Loaded app from partition at offset 0x10000
 I (...) esp_image: App version: 0.3.3-rc106
