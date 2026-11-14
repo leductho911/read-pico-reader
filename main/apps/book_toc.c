@@ -136,6 +136,9 @@ static void fit_line(char *text, int px, int width) {
 
 // 用完整标题固定字体来源，截短后也不因缺字判断改变粗细。/ Keep the full title as the font sample so truncation cannot change the face or weight.
 static void toc_title(uint8_t *fb, EpdRect box, int preferred_px, const char *text, uint8_t background) {
+#ifdef ESP_PLATFORM
+    text = ui_tr(text);
+#endif
     char sample[160], shown[160];
     one_line(sample, sizeof(sample), text);
     memcpy(shown, sample, strlen(sample) + 1);
@@ -199,6 +202,9 @@ static void toc_border(uint8_t *fb, EpdRect rect, int radius, bool selected) {
 }
 
 static void toc_pill(uint8_t *fb, EpdRect rect, const char *text, int px, bool selected) {
+#ifdef ESP_PLATFORM
+    text = ui_tr(text);
+#endif
     ui_fill_round_rect(fb, rect, 20, selected ? 0xc0 : UI_GRAY_WHITE);
     toc_border(fb, rect, 20, selected);
     char label[160];
