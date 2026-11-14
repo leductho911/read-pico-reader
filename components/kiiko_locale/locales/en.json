@@ -1412,5 +1412,7 @@
   "阅读线已开启": "Reading line on",
   "阅读线开关": "Reading Line",
   "降序": "Descending",
-  "验证原密码": "Verify Current PIN"
+  "验证原密码": "Verify Current PIN",
+  "时区": "Timezone",
+  "当前时间": "Current time"
 }

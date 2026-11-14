@@ -101,6 +101,7 @@
 #define NVS_KEY_FONTS_DIR "fonts_dir"
 #define NVS_KEY_BOOK_FONTS "bk_fonts"
 #define NVS_KEY_BOOK_VERTICAL "bk_vert"
+#define NVS_KEY_TIMEZONE "timezone"
 #define FONT_PATH_MAX 160
 #define MEDIA_DIR_MAX 96
 
@@ -109,6 +110,7 @@ static bool s_staged_shutdown;
 static uint8_t s_wake_presses = 1;
 static uint8_t s_pin_grace_code_v;  // 0-4 档位码，NVS 存码不存分钟 / 0-4 step code, NVS stores the code not minutes
 static uint32_t s_pin_locked_at;    // 最近一次带密码锁屏的 unix 秒 / last PIN-enabled lock, unix seconds
+static int8_t s_timezone = 7;       // 默认 UTC+7
 static bool s_home_full_refresh = true;
 static app_home_component_t s_home_component = APP_HOME_MOON;
 static uint8_t s_home_goal_minutes = 30;
@@ -250,6 +252,9 @@ void app_settings_init(void) {
 
     raw = 0;
     if (nvs_get_u8(h, NVS_KEY_AUTO_LOCK, &raw) == ESP_OK && (raw == 1 || raw == 5 || raw == 10)) s_auto_lock_minutes = raw;
+    int8_t tz_val = 7;
+    if (nvs_get_i8(h, NVS_KEY_TIMEZONE, &tz_val) == ESP_OK && tz_val >= -12 && tz_val <= 14) s_timezone = tz_val;
+    else s_timezone = 7;
     size_t value_len = sizeof(s_device_name);
     if (nvs_get_str(h, NVS_KEY_DEVICE_NAME, s_device_name, &value_len) != ESP_OK || !s_device_name[0])
         strlcpy(s_device_name, "kiikoread", sizeof(s_device_name));
@@ -508,6 +513,22 @@ void app_settings_set_auto_lock_minutes(uint8_t minutes) {
     if (s_auto_lock_minutes == minutes) return;
     s_auto_lock_minutes = minutes;
     nvs_put_u8(NVS_KEY_AUTO_LOCK, minutes);
+}
+
+int8_t app_settings_timezone(void) { return s_timezone; }
+void app_settings_set_timezone(int8_t tz) {
+    if (tz < -12) tz = -12;
+    if (tz > 14) tz = 14;
+    if (s_timezone == tz) return;
+    s_timezone = tz;
+    nvs_handle_t h;
+    if (nvs_open(NVS_NS, NVS_READWRITE, &h) != ESP_OK) return;
+    esp_err_t err = nvs_set_i8(h, NVS_KEY_TIMEZONE, tz);
+    if (err == ESP_OK) err = nvs_commit(h);
+    nvs_close(h);
+}
+int32_t app_settings_timezone_offset_seconds(void) {
+    return (int32_t)s_timezone * 3600;
 }
 
 void app_settings_set_home_full_refresh(bool enabled) {

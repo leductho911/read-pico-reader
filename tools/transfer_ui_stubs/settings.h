@@ -10,3 +10,6 @@ static inline void app_settings_set_font_path(const char *path) {(void)path;}
 static inline void app_settings_set_wallpaper_path(const char *path) {(void)path;}
 static inline void app_settings_set_lock_style(uint8_t style) {(void)style;}
 static inline uint8_t app_settings_lock_style(void) {return 1;}
+static inline int8_t app_settings_timezone(void) {return 7;}
+static inline void app_settings_set_timezone(int8_t tz) {(void)tz;}
+static inline int32_t app_settings_timezone_offset_seconds(void) {return 7 * 3600;}

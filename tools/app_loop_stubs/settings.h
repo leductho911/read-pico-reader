@@ -7,6 +7,10 @@ void app_settings_set_ble_turner(bool enabled);
 
 uint8_t app_settings_auto_lock_minutes(void);
 
+int8_t app_settings_timezone(void);
+void app_settings_set_timezone(int8_t tz);
+int32_t app_settings_timezone_offset_seconds(void);
+
 uint8_t app_settings_system_contrast(void);
 
 #if KIIKO_BOARD_METALIO47

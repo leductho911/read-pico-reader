@@ -83,6 +83,11 @@ bool app_settings_main_fast_refresh(void);
 /// 无操作自动锁屏分钟数：0 关闭，1/5/10。/ Idle lock timeout: off, 1/5/10 minutes.
 uint8_t app_settings_auto_lock_minutes(void);
 void app_settings_set_auto_lock_minutes(uint8_t minutes);
+/// 时区偏差（小时），范围 -12..+14，默认 +7 (UTC+7)。
+/// Timezone offset (hours), range -12..+14, defaults to +7 (UTC+7).
+int8_t app_settings_timezone(void);
+void app_settings_set_timezone(int8_t tz);
+int32_t app_settings_timezone_offset_seconds(void);
 const char *app_settings_device_name(void);
 void app_settings_set_device_name(const char *name);
 const char *app_settings_avatar_path(void);

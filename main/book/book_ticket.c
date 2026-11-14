@@ -27,6 +27,7 @@
 #include "esp_heap_caps.h"
 #include "nvs.h"
 #include "read_pico_pmu.h"
+#include "settings.h"
 #include "ttf_font.h"
 #include "ui_kit.h"
 
@@ -62,7 +63,7 @@ static uint32_t local_day(void) {
         if (pmu && pmu->time_synced && pmu->unix_sec >= 1704067200) now = pmu->unix_sec;
     }
     if (now < 1704067200) return 0;
-    return (uint32_t)((now + 8 * 3600) / 86400);
+    return (uint32_t)((now + app_settings_timezone_offset_seconds()) / 86400);
 }
 static void stats_load(ticket_stats_t *out) {
     memset(out, 0, sizeof(*out));

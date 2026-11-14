@@ -659,7 +659,7 @@ static void time_open(void) {
         s_year = year; s_month = m; s_day = day; s_hour = s_minute = 0;
     } else {
         struct tm date;
-        time_t local = now + 8 * 3600;
+        time_t local = now + app_settings_timezone_offset_seconds();
         gmtime_r(&local, &date);
         s_year = date.tm_year + 1900; s_month = date.tm_mon + 1; s_day = date.tm_mday;
         s_hour = date.tm_hour; s_minute = date.tm_min;
@@ -680,7 +680,7 @@ static void time_adjust(int field, int step) {
 
 static bool time_save(void) {
     int64_t epoch = civil_days(s_year, s_month, s_day) * 86400 +
-                    s_hour * 3600 + s_minute * 60 - 8 * 3600;
+                    s_hour * 3600 + s_minute * 60 - app_settings_timezone_offset_seconds();
     if (epoch < 1704067200 || epoch > 4102444799LL) return false;
     struct timeval tv = {.tv_sec = (time_t)epoch, .tv_usec = 0};
     if (settimeofday(&tv, NULL)) return false;
@@ -1214,7 +1214,9 @@ static void render_content(app_ctx_t *ctx, uint8_t *fb) {
     if (s_page == SETTINGS_TIME_EDIT) {
         ui_nav_back(fb, 36, 79);
         ui_text(fb, 36, 151, 47, "日期与时间", EPD_DRAW_ALIGN_LEFT, false);
-        ui_text(fb, 36, 216, 23, "北京时间 · UTC+8", EPD_DRAW_ALIGN_LEFT, false);
+        char tz_info[32];
+        snprintf(tz_info, sizeof(tz_info), "UTC%+d", app_settings_timezone());
+        ui_text(fb, 36, 216, 23, tz_info, EPD_DRAW_ALIGN_LEFT, false);
         ui_hairline(fb, 259, 36, 612, UI_GRAY_LIGHT);
         static const char *const labels[] = {"年", "月", "日期", "时", "分"};
         int values[] = {s_year, s_month, s_day, s_hour, s_minute};
@@ -1455,17 +1457,20 @@ static void render_content(app_ctx_t *ctx, uint8_t *fb) {
         time_t now = time(NULL);
         char shown[64] = "未设置";
         if (now >= 1704067200) {
-            struct tm tm; time_t local = now + 8 * 3600;
+            struct tm tm; time_t local = now + app_settings_timezone_offset_seconds();
             if (gmtime_r(&local, &tm)) snprintf(shown, sizeof(shown), "%04d-%02d-%02d  %02d:%02d",
                 tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min);
         }
-        section(fb, 253, "当前时间 · 北京时间");
+        char tz_text[32];
+        snprintf(tz_text, sizeof(tz_text), "UTC%+d  ‹ ›", app_settings_timezone());
+        section(fb, 253, "当前时间");
         row(fb, 296, shown, "");
-        row(fb, 407, "通过 WiFi 对时", "立即同步  ›");
-        row(fb, 518, "手动设置", "编辑  ›");
-        ui_text(fb, 54, 656, 21, "对时成功后由内部时钟持续走时；无需保持联网。", EPD_DRAW_ALIGN_LEFT, false);
-        ui_text(fb, 54, 694, 21, "长时间离线可能产生误差，建议定期重新对时。", EPD_DRAW_ALIGN_LEFT, false);
-        if (s_notice[0]) ui_text(fb, 54, 772, 22, s_notice, EPD_DRAW_ALIGN_LEFT, false);
+        row(fb, 407, "时区", tz_text);
+        row(fb, 518, "通过 WiFi 对时", "立即同步  ›");
+        row(fb, 629, "手动设置", "编辑  ›");
+        ui_text(fb, 54, 767, 21, "对时成功后由内部时钟持续走时；无需保持联网。", EPD_DRAW_ALIGN_LEFT, false);
+        ui_text(fb, 54, 805, 21, "长时间离线可能产生误差，建议定期重新对时。", EPD_DRAW_ALIGN_LEFT, false);
+        if (s_notice[0]) ui_text(fb, 54, 883, 22, s_notice, EPD_DRAW_ALIGN_LEFT, false);
         settings_navigation(fb);
         return;
     }
@@ -3008,11 +3013,18 @@ static app_redraw_t on_gesture(app_ctx_t *ctx, const ui_gesture_event_t *ev) {
     }
     if (s_page == SETTINGS_TIME) {
         if (y >= 407 && y < 477) {
+            int8_t tz = app_settings_timezone();
+            if (ev->x0 < 360) tz = (tz <= -12) ? 14 : (tz - 1);
+            else tz = (tz >= 14) ? -12 : (tz + 1);
+            app_settings_set_timezone(tz);
+            return APP_REDRAW_PAGE;
+        }
+        if (y >= 518 && y < 588) {
             s_notice[0] = 0; s_sync_pending = true;
             snprintf(s_notice, sizeof(s_notice), "正在获取网络时间…");
             return APP_REDRAW_PAGE;
         }
-        if (y >= 518 && y < 588) { time_open(); return APP_REDRAW_PAGE; }
+        if (y >= 629 && y < 699) { time_open(); return APP_REDRAW_PAGE; }
         return APP_REDRAW_NONE;
     }
 #if KIIKO_BOARD_METALIO47

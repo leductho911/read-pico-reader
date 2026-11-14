@@ -184,9 +184,9 @@ static void clock_text(char *clock, size_t capacity) {
     time_t now = status_time();
     snprintf(clock,capacity,"--:--");
     if (now > 1704067200) {
-        time_t china = now + 8 * 3600;
+        time_t local = now + app_settings_timezone_offset_seconds();
         struct tm date;
-        if (gmtime_r(&china, &date)) snprintf(clock, capacity, "%02d:%02d", date.tm_hour, date.tm_min);
+        if (gmtime_r(&local, &date)) snprintf(clock, capacity, "%02d:%02d", date.tm_hour, date.tm_min);
     }
 }
 void ui_nav_clock_draw(uint8_t *fb) {

@@ -416,12 +416,12 @@ static bool date_now(struct tm *out) {
     time_t now=time(NULL);
     if(now<1704067200) { const pmu_snapshot_t *pmu=read_pico_pmu_get(); if(pmu&&pmu->time_synced)now=pmu->unix_sec; }
     if(now<1704067200) {memset(out,0,sizeof(*out));return false;}
-    now+=8*3600;gmtime_r(&now,out);return true;
+    now+=app_settings_timezone_offset_seconds();gmtime_r(&now,out);return true;
 }
 static int64_t date_stamp(const struct tm *d) {return ((int64_t)d->tm_year*366+d->tm_yday)*86400+d->tm_hour*3600+d->tm_min*60+d->tm_sec;}
 static unsigned clock_phase_now(struct tm *date) {
     struct timeval now;
-    if(!gettimeofday(&now,NULL)&&now.tv_sec>=1704067200){time_t local=now.tv_sec+8*3600;gmtime_r(&local,date);return date->tm_sec*10+(unsigned)now.tv_usec/100000;}
+    if(!gettimeofday(&now,NULL)&&now.tv_sec>=1704067200){time_t local=now.tv_sec+app_settings_timezone_offset_seconds();gmtime_r(&local,date);return date->tm_sec*10+(unsigned)now.tv_usec/100000;}
     return (unsigned)date->tm_sec*10;
 }
 static bool clock_motion_due(app_ctx_t *ctx){return ctx->now_ms<=0||ctx->now_ms<s_motion_ms||ctx->now_ms-s_motion_ms>=100;}
