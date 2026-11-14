@@ -1884,6 +1884,23 @@ static int reader_missing_advance(uint32_t cp,int px) {
         int han=stbtt_FindGlyphIndex(builtin,0x4e00),advance,lsb;
         if(han){stbtt_GetGlyphHMetrics(builtin,han,&advance,&lsb);return (int)lroundf(advance*stbtt_ScaleForPixelHeight(builtin,(float)px));}
     }
+    uint32_t base = vietnamese_base_codepoint(cp);
+    if (base) {
+        int bgid = stbtt_FindGlyphIndex(&font_info, (int)base);
+        if (bgid) {
+            int advance, lsb;
+            stbtt_GetGlyphHMetrics(&font_info, bgid, &advance, &lsb);
+            return (int)lroundf(advance * stbtt_ScaleForPixelHeight(&font_info, (float)px));
+        }
+        if (builtin) {
+            bgid = stbtt_FindGlyphIndex(builtin, (int)base);
+            if (bgid) {
+                int advance, lsb;
+                stbtt_GetGlyphHMetrics(builtin, bgid, &advance, &lsb);
+                return (int)lroundf(advance * stbtt_ScaleForPixelHeight(builtin, (float)px));
+            }
+        }
+    }
     return -1;
 }
 static uint8_t s_cover[256];
@@ -1891,7 +1908,7 @@ static void ttf_cover_lut_init(void);
 static glyph_entry_t* rasterize_glyph(uint32_t codepoint, int pixel_height) {
     int gid = stbtt_FindGlyphIndex(&font_info, (int)codepoint);
     const stbtt_fontinfo *raster_font=&font_info;
-    bool borrowed=false,supplemental=false;
+    bool borrowed=false,supplemental=false,vn_synth=false;
     uint8_t extra[UI_HANZI_AA_RECORD];
     if (!gid) {
         const stbtt_fontinfo *builtin=reader_builtin_fallback();
@@ -1905,9 +1922,10 @@ static glyph_entry_t* rasterize_glyph(uint32_t codepoint, int pixel_height) {
             uint32_t base = vietnamese_base_codepoint(codepoint);
             if (base) {
                 gid = stbtt_FindGlyphIndex(&font_info, (int)base);
-                if (!gid && builtin) {
+                if (gid) vn_synth = true;
+                else if (builtin) {
                     gid = stbtt_FindGlyphIndex(builtin, (int)base);
-                    if (gid) { raster_font = builtin; borrowed = true; }
+                    if (gid) { raster_font = builtin; borrowed = true; vn_synth = true; }
                 }
             }
         }
@@ -1919,6 +1937,10 @@ static glyph_entry_t* rasterize_glyph(uint32_t codepoint, int pixel_height) {
     if (supplemental) {
         ui_hanzi_aa_bounds(extra,pixel_height,&x0,&y0,&x1,&y1);
     } else stbtt_GetGlyphBitmapBox(raster_font, gid, scale, scale, &x0, &y0, &x1, &y1);
+    int bx0 = x0, by0 = y0, bx1 = x1, by1 = y1;
+    if (vn_synth && bx1 > bx0 && by1 > by0) {
+        vietnamese_pad_bounds(codepoint, pixel_height, &x0, &y0, &x1, &y1);
+    }
 
     int width = x1 - x0;
     int height = y1 - y0;
@@ -1945,6 +1967,13 @@ static glyph_entry_t* rasterize_glyph(uint32_t codepoint, int pixel_height) {
         if (supplemental) {
             ttf_cover_lut_init();
             ui_hanzi_aa_raster(extra,pixel_height,x0,y0,width,height,entry->bitmap,s_cover);
+        } else if (vn_synth && bx1 > bx0 && by1 > by0) {
+            memset(entry->bitmap, 0, bitmap_bytes);
+            stbtt_MakeGlyphBitmap(
+                raster_font, entry->bitmap + (by0 - y0) * width + (bx0 - x0),
+                bx1 - bx0, by1 - by0, width, scale, scale, gid
+            );
+            vietnamese_draw_diacritics(codepoint, pixel_height, x0, y0, bx0, by0, bx1, by1, entry->bitmap, width, height);
         } else stbtt_MakeGlyphBitmap(
             raster_font, entry->bitmap, width, height, width, scale, scale, gid
         );
@@ -2097,6 +2126,10 @@ static void warm_text_io(int pixel_height, const char* text, const char* end) {
         cps[seen++] = cp;
         if (cache_lookup(cp, pixel_height) != NULL) continue;
         int gid = stbtt_FindGlyphIndex(&font_info, (int)cp);
+        if (!gid && !ui_hanzi_has(cp)) {
+            uint32_t base = vietnamese_base_codepoint(cp);
+            if (base) gid = stbtt_FindGlyphIndex(&font_info, (int)base);
+        }
         if (!gid && reader_missing_advance(cp,pixel_height)>=0) continue;
         if (gid < 0 || gid >= num_glyphs) continue;
         io_touch(file_glyf_off + file_glyph_off(gid), file_glyph_len(gid));

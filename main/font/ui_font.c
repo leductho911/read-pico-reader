@@ -86,10 +86,7 @@ bool ui_font_has_text(const char *text) {
     if (!text || !ready()) return false;
     while (*text) {
         uint32_t cp = next_cp(&text);
-        if (!stbtt_FindGlyphIndex(&s_font, (int)cp) && !ui_hanzi_has(cp)) {
-            uint32_t base = vietnamese_base_codepoint(cp);
-            if (!base || !stbtt_FindGlyphIndex(&s_font, (int)base)) return false;
-        }
+        if (!stbtt_FindGlyphIndex(&s_font, (int)cp) && !ui_hanzi_has(cp)) return false;
     }
     return true;
 }
@@ -125,11 +122,18 @@ void ui_font_measure_line_px(int px, const char *text, int *above, int *below) {
                 x0 = 0; x1 = 1;
             } else {
                 int render_cp = (int)cp;
+                bool vn_synth = false;
                 if (!stbtt_FindGlyphIndex(&s_font, render_cp)) {
                     uint32_t base = vietnamese_base_codepoint(cp);
-                    if (base && stbtt_FindGlyphIndex(&s_font, (int)base)) render_cp = (int)base;
+                    if (base && stbtt_FindGlyphIndex(&s_font, (int)base)) {
+                        render_cp = (int)base;
+                        vn_synth = true;
+                    }
                 }
                 stbtt_GetCodepointBitmapBox(&s_font, render_cp, scale, scale, &x0, &y0, &x1, &y1);
+                if (vn_synth && x1 > x0 && y1 > y0) {
+                    vietnamese_pad_bounds(cp, clamp_px(px), &x0, &y0, &x1, &y1);
+                }
             }
             if (x1 <= x0 || y1 <= y0) continue;
             if (-y0 > top) top = -y0;
@@ -165,14 +169,22 @@ static ui_glyph_t *glyph(uint32_t cp, int px) {
     uint8_t extra[UI_HANZI_RECORD];
     bool supplemental = !stbtt_FindGlyphIndex(&s_font, (int)cp) && ui_hanzi_get(cp, extra);
     int render_cp = (int)cp;
+    bool vn_synth = false;
     if (!supplemental && !stbtt_FindGlyphIndex(&s_font, (int)cp)) {
         uint32_t base = vietnamese_base_codepoint(cp);
-        if (base && stbtt_FindGlyphIndex(&s_font, (int)base)) render_cp = (int)base;
+        if (base && stbtt_FindGlyphIndex(&s_font, (int)base)) {
+            render_cp = (int)base;
+            vn_synth = true;
+        }
     }
     int advance, left;
     stbtt_GetCodepointHMetrics(&s_font, render_cp, &advance, &left);
     int x0, y0, x1, y1;
     stbtt_GetCodepointBitmapBox(&s_font, render_cp, scale, scale, &x0, &y0, &x1, &y1);
+    int bx0 = x0, by0 = y0, bx1 = x1, by1 = y1;
+    if (vn_synth && bx1 > bx0 && by1 > by0) {
+        vietnamese_pad_bounds(cp, px, &x0, &y0, &x1, &y1);
+    }
     int fallback_advance = 0;
     if (supplemental) {
         x0 = (int)floorf((int8_t)extra[0] * (float)px / UI_HANZI_BASE_PX);
@@ -197,6 +209,14 @@ static ui_glyph_t *glyph(uint32_t cp, int px) {
     if (g->bitmap) {
         if (supplemental) for (int y = 0; y < g->height; ++y) for (int x = 0; x < g->width; ++x) {
             g->bitmap[y * g->width + x] = ui_hanzi_coverage(extra, g->width, g->height, x, y);
+        }
+        else if (vn_synth && bx1 > bx0 && by1 > by0) {
+            memset(g->bitmap, 0, g->bytes);
+            stbtt_MakeCodepointBitmap(
+                &s_font, g->bitmap + (by0 - y0) * g->width + (bx0 - x0),
+                bx1 - bx0, by1 - by0, g->width, scale, scale, render_cp
+            );
+            vietnamese_draw_diacritics(cp, px, x0, y0, bx0, by0, bx1, by1, g->bitmap, g->width, g->height);
         }
         else stbtt_MakeCodepointBitmap(&s_font, g->bitmap, g->width, g->height, g->width,
                                       scale, scale, render_cp);

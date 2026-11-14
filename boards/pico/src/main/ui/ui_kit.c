@@ -326,6 +326,11 @@ void ui_draw_pressed_round_rect(uint8_t* framebuffer, EpdRect rect, int radius) 
     ui_draw_selected_round_rect(framebuffer, rect, radius);
 }
 
+static bool ui_use_builtin_font(const char* text) {
+    return (!s_system_ttf || ttf_font_is_builtin()) &&
+           (ui_font_has_text(text) || !ttf_font_has_text(text));
+}
+
 void ui_text(
     uint8_t* framebuffer, int x, int y_top, int px, const char* text,
     enum EpdFontFlags align, bool inverted
@@ -337,7 +342,7 @@ void ui_text(
     px = ui_text_effective_px(px);
     uint8_t fg = inverted ? UI_INK_WHITE : UI_INK_BLACK;
     uint8_t bg = inverted ? UI_INK_BLACK : UI_INK_WHITE;
-    if ((!s_system_ttf || ttf_font_is_builtin()) && ui_font_has_text(text))
+    if (ui_use_builtin_font(text))
         ui_font_draw_text_px(framebuffer, x, y_top + ui_font_ascender_px(px), px, text, align, fg, bg, false);
     else ttf_draw_text_px(framebuffer, x, y_top + ttf_ascender_px(px), px, text, align, fg, bg);
 }
@@ -353,7 +358,7 @@ void ui_text_line_span_px(int px, const char* text, int* above, int* below) {
     px = ui_text_effective_px(px);
     int a = 0, b = 0;
     if (text && text[0]) {
-        if ((!s_system_ttf || ttf_font_is_builtin()) && ui_font_has_text(text))
+        if (ui_use_builtin_font(text))
             ui_font_measure_line_px(px, text, &a, &b);
         else ttf_measure_line_px(px, text, &a, &b);
     }
@@ -373,7 +378,7 @@ int ui_text_ink_center_y(int y_top, int px, const char *text) {
     px = ui_text_effective_px(px);
     int above = 0, below = 0, ascender = 0;
     if (text && text[0]) {
-        if ((!s_system_ttf || ttf_font_is_builtin()) && ui_font_has_text(text)) {
+        if (ui_use_builtin_font(text)) {
             ui_font_measure_line_px(px, text, &above, &below);
             ascender = ui_font_ascender_px(px);
         } else {
@@ -399,7 +404,7 @@ int ui_text_fixed_context_width_px(int px, const char* text, const char* font_sa
 #endif
 
     if (!text || px <= 0) return 0;
-    return (!s_system_ttf || ttf_font_is_builtin()) && ui_font_has_text(font_sample ? font_sample : text)
+    return ui_use_builtin_font(font_sample ? font_sample : text)
         ? ui_font_text_width_px(px, text)
         : ttf_text_width_px(px, text);
 }
@@ -414,7 +419,7 @@ void ui_text_fixed(
 
     uint8_t fg = inverted ? UI_INK_WHITE : UI_INK_BLACK;
     uint8_t bg = inverted ? UI_INK_BLACK : UI_INK_WHITE;
-    if ((!s_system_ttf || ttf_font_is_builtin()) && ui_font_has_text(text))
+    if (ui_use_builtin_font(text))
         ui_font_draw_text_px(framebuffer, x, y_top + ui_font_ascender_px(px), px, text, align, fg, bg, false);
     else
         ttf_draw_text_px(framebuffer, x, y_top + ttf_ascender_px(px), px, text, align, fg, bg);
@@ -444,7 +449,7 @@ void ui_text_fixed_context_vc(
     int above = 0, below = 0;
     uint8_t fg = inverted ? UI_INK_WHITE : UI_INK_BLACK;
     uint8_t bg = inverted ? UI_INK_BLACK : UI_INK_WHITE;
-    if ((!s_system_ttf || ttf_font_is_builtin()) && ui_font_has_text(font_sample ? font_sample : text)) {
+    if (ui_use_builtin_font(font_sample ? font_sample : text)) {
         ui_font_measure_line_px(px, text, &above, &below);
         ui_font_draw_text_px(framebuffer, x, center_y + (above - below) / 2, px, text, align, fg, bg, false);
     } else {
@@ -461,7 +466,7 @@ void ui_text_box(uint8_t *fb, EpdRect box, int px, const char *text,
 
     if (!fb || !text || !text[0] || box.width <= 0 || box.height <= 0) return;
     px = ui_text_effective_px(px);
-    const bool builtin = (!s_system_ttf || ttf_font_is_builtin()) && ui_font_has_text(text);
+    const bool builtin = ui_use_builtin_font(text);
     while (px > 1) {
         int above = 0, below = 0;
         if (builtin) ui_font_measure_line_px(px,text,&above,&below);
@@ -492,7 +497,7 @@ void ui_text_fixed_ink_vc(uint8_t *fb, int x, int center_y, int px, const char *
     if (!fb || !text || !*text || px <= 0) return;
     int above = 0, below = 0;
     uint8_t ink = ui_contrast_gray(gray) >> 4;
-    if ((!s_system_ttf || ttf_font_is_builtin()) && ui_font_has_text(text)) {
+    if (ui_use_builtin_font(text)) {
         ui_font_measure_line_px(px, text, &above, &below);
         ui_font_draw_text_px(fb, x, center_y + (above-below)/2, px, text, align, ink, UI_INK_WHITE, false);
     } else {
@@ -517,7 +522,7 @@ void ui_text_fixed_context_aa_vc(uint8_t *fb,int x,int center_y,int px,const cha
     if(!fb||!text||!*text||px<=0)return;
     int above=0,below=0;
     uint8_t ink=ui_contrast_gray(gray)>>4,back=ui_contrast_gray(background)>>4;
-    if((!s_system_ttf||ttf_font_is_builtin())&&ui_font_has_text(font_sample?font_sample:text)) {
+    if(ui_use_builtin_font(font_sample?font_sample:text)) {
         ui_font_measure_line_px(px,text,&above,&below);
         ui_font_draw_text_px(fb,x,center_y+(above-below)/2,px,text,align,ink,back,false);
     } else {
@@ -596,7 +601,7 @@ void ui_text_bw(
     px = ui_text_effective_px(px);
     uint8_t fg = inverted ? UI_INK_WHITE : UI_INK_BLACK;
     uint8_t bg = inverted ? UI_INK_BLACK : UI_INK_WHITE;
-    if ((!s_system_ttf || ttf_font_is_builtin()) && ui_font_has_text(text))
+    if (ui_use_builtin_font(text))
         ui_font_draw_text_px(framebuffer, x, y_top + ui_font_ascender_px(px), px, text, align, fg, bg, true);
     else ttf_draw_text_px_bw(framebuffer, x, y_top + ttf_ascender_px(px), px, text, align, fg, bg);
 }
@@ -614,7 +619,7 @@ void ui_text_vc(
     int below = 0;
     uint8_t fg = inverted ? UI_INK_WHITE : UI_INK_BLACK;
     uint8_t bg = inverted ? UI_INK_BLACK : UI_INK_WHITE;
-    if ((!s_system_ttf || ttf_font_is_builtin()) && ui_font_has_text(text)) {
+    if (ui_use_builtin_font(text)) {
         ui_font_measure_line_px(px, text, &above, &below);
         ui_font_draw_text_px(framebuffer, x, center_y + (above - below) / 2, px, text, align, fg, bg, false);
     } else {
